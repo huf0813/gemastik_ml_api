@@ -87,11 +87,3 @@ def model_forecast(model, series, window_size):
     ds = ds.batch(32).prefetch(1)
     forecast = model.predict(ds)
     return forecast
-
-
-if __name__ == "__main__":
-    name = "sugar"
-    days = 30
-    model = load_model(name)
-    result = commodity_predict(days, model, name)
-    print(commodity_future_price('sugar', 7))
