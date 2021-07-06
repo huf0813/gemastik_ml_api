@@ -1,3 +1,4 @@
+import numpy
 from fastapi import FastAPI
 import csv
 import numpy as np
@@ -7,6 +8,7 @@ app = FastAPI()
 
 
 def success_response(data):
+    print(type(data))
     return {"success": True,
             "message": "success",
             "data": data}
@@ -29,26 +31,25 @@ def commodity_dataset(path):
     return series
 
 
-def commodity_predict(days, model, name):
-    path = 'dataset/{}.csv'.format(name)
+def commodity_predict(day, model, commodity_name):
+    path = 'dataset/{}.csv'.format(commodity_name)
     series = commodity_dataset(path)
-
-    result = price_prediction(days, model, series)
-    return result
+    commodity_result = price_prediction(day, model, series)
+    return commodity_result
 
 
 @app.get("/commodity")
-def commodity(name: str, days: int):
-    dataset_path = "dataset/{}.csv".format(name)
+def commodity(commodity_name: str, day: int):
+    dataset_path = "dataset/{}.csv".format(commodity_name)
     dataset = commodity_dataset(dataset_path)
-    return success_response(dataset[-days:])
+    return success_response(dataset[-day:])
 
 
 @app.get("/commodity/predict")
-def commodity_future_price(name: str, days: int = 0):
-    model = load_model(name)
-    result = commodity_predict(days, model, name)
-    return success_response(result)
+def commodity_future_price(commodity_name: str, day: int = 0):
+    model = load_model(commodity_name)
+    commodity_result = commodity_predict(day, model, commodity_name)
+    return success_response(commodity_result)
 
 
 # Machine Learning
@@ -58,36 +59,25 @@ def load_model(name):
     return model
 
 
-def price_prediction(days: int, model, commodity_series):
+def price_prediction(day_future: int, model, commodity_series):
     split_time = 2500
-    x_valid = commodity_series[split_time:]
+    x_valid = numpy.array(commodity_series[split_time:])
+    scalar_days = len(x_valid) - day_future
+    temp = x_valid[scalar_days:]
 
-    temp = len(x_valid) - days
-    temp = x_valid[temp:]
+    final_predict = []
 
-    result = []
+    for i in range(day_future):
+        rnn_forecast = model_forecast(model, temp[..., np.newaxis], len(temp))
+        index_value = float(rnn_forecast[0][-1][0])
+        final_predict.append(index_value)
 
-    # for i in range(days):
-    #     rnn_forecast = model_forecast(model, temp[..., np.newaxis], len(temp))
-    #     index_value = rnn_forecast[0][-1][0]
-    #     result.append(index_value)
-    #
-    #     # delete first value
-    #     temp = np.delete(temp, 0)
-    #
-    #     # add last value
-    #     temp = np.append(temp, index_value)
+        # delete first value
+        temp = np.delete(temp, 0)
+        # add last value
+        temp = np.append(temp, 1)
 
-    rnn_forecast = model_forecast(model, temp[..., np.newaxis], len(temp))
-    index_value = rnn_forecast[0][-1][0]
-    result.append(index_value)
-
-    # delete first value
-    temp = np.delete(temp, 0)
-
-    # add last value
-    np.append(temp, index_value)
-    return result
+    return final_predict
 
 
 def model_forecast(model, series, window_size):
@@ -104,3 +94,4 @@ if __name__ == "__main__":
     days = 30
     model = load_model(name)
     result = commodity_predict(days, model, name)
+    print(commodity_future_price('sugar', 7))
