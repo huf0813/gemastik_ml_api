@@ -1,8 +1,12 @@
+import datetime
+
 import numpy
 from fastapi import FastAPI
 import csv
 import numpy as np
 import tensorflow as tf
+from datetime import date, timedelta
+import pandas as pd
 
 app = FastAPI()
 
@@ -29,8 +33,10 @@ def commodity_dataset(path):
             price = float(price_close)
             series.append(price)
 
+            origin = row[0]
+            range_day = len(pd.date_range(start=origin, end=date.today().strftime("%Y-%m-%d")))
             obj = {
-                "time": step,
+                "time": origin,
                 "value": price
             }
             response_series.append(obj)
@@ -79,8 +85,9 @@ def price_prediction(day_future: int, model, commodity_series):
         rnn_forecast = model_forecast(model, temp[..., np.newaxis], len(temp))
         index_value = float(rnn_forecast[0][-1][0])
 
+        today = date.today() + timedelta(days=day_future + i - 1)
         obj = {
-            "time": i,
+            "time": today.strftime("%Y-%m-%d"),
             "value": index_value
         }
 
