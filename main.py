@@ -1,3 +1,4 @@
+import numpy
 from fastapi import FastAPI, UploadFile, File
 import csv
 import uuid
@@ -7,6 +8,7 @@ import tensorflow as tf
 from datetime import date, timedelta
 import pandas as pd
 from PIL import Image, ImageOps
+import operator
 import shutil
 
 app = FastAPI()
@@ -68,48 +70,41 @@ def commodity_future_price(commodity_name: str, day: int = 0):
 
 
 @app.post('/commodity_image/predict')
-def commodity_image(furniture_image: UploadFile = File(...)):
-    # Disable scientific notation for clarity
+def commodity_image(commodity_image: UploadFile = File(...)):
     np.set_printoptions(suppress=True)
 
-    # Load the model
     model = tf.keras.models.load_model('models/keras_model.h5')
 
-    # Create the array of the right shape to feed into the keras model
-    # The 'length' or number of images you can put into the array is
-    # determined by the first position in the shape tuple, in this case 1.
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
-    # Replace this with the path to your image
     generate_uuid = uuid.uuid4().hex
-    file_name_uuid = '{}_{}'.format(generate_uuid, furniture_image.filename)
+    file_name_uuid = '{}_{}'.format(generate_uuid, commodity_image.filename)
     with open('temp/{}'.format(file_name_uuid), 'wb') as image:
-        shutil.copyfileobj(furniture_image.file, image)
+        shutil.copyfileobj(commodity_image.file, image)
     image = Image.open('temp/{}'.format(file_name_uuid))
 
-    # resize the image to a 224x224 with the same strategy as in TM2:
-    # resizing the image to be at least 224x224 and then cropping from the center
     size = (224, 224)
     image = ImageOps.fit(image, size, Image.ANTIALIAS)
 
-    # turn the image into a numpy array
     image_array = np.asarray(image)
 
-    # display the resized image
-    image.show()
-
-    # Normalize the image
     normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
 
-    # Load the image into the array
     data[0] = normalized_image_array
 
-    # run the inference
     prediction = model.predict(data)
 
-    # delete
+    pr = np.argmax(prediction, axis=1)
+
+    if pr[0] == 0:
+        result = {"commodity_name": "kedelai", "deskripsi": "kedelai dengan jenis"}
+    elif pr[0] == 1:
+        result = {"commodity_name": "jagung", "deskripsi": "jagung dengan jenis"}
+    else:
+        result = {"commodity_name": "kopi", "deskripsi": "kopi dengan jenis"}
+
     os.remove('temp/{}'.format(file_name_uuid))
-    return success_response(prediction)
+    return success_response(result)
 
 
 # Machine Learning
@@ -154,3 +149,6 @@ def model_forecast(model, series, window_size):
     ds = ds.batch(32).prefetch(1)
     forecast = model.predict(ds)
     return forecast
+
+# if __name__ == "__main__":
+#     print(commodity_image())
