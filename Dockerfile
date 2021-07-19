@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
 # install dependencies
 COPY mod.txt .
 RUN pip install -r mod.txt
+RUN pip install python-multipart
 
 # copy project
 COPY . .
