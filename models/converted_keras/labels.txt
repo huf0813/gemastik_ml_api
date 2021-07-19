@@ -1,0 +1,3 @@
+0 kedelai
+1 jagung
+2 kopi
