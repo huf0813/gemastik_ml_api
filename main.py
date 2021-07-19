@@ -16,6 +16,7 @@ def success_response(data):
 
 def commodity_dataset(path):
     series = []
+    response_series = []
 
     with open(path) as csv_file:
         reader = csv.reader(csv_file, delimiter=',')
@@ -25,15 +26,22 @@ def commodity_dataset(path):
             price_close = row[5]
             if price_close == "null":
                 continue
-            series.append(float(price_close))
+            price = float(price_close)
+            series.append(price)
+
+            obj = {
+                "time": step,
+                "value": price
+            }
+            response_series.append(obj)
             step = step + 1
 
-    return series
+    return series, response_series
 
 
 def commodity_predict(day, model, commodity_name):
     path = 'dataset/{}.csv'.format(commodity_name)
-    series = commodity_dataset(path)
+    series, _ = commodity_dataset(path)
     commodity_result = price_prediction(day, model, series)
     return commodity_result
 
@@ -41,7 +49,7 @@ def commodity_predict(day, model, commodity_name):
 @app.get("/commodity")
 def commodity(commodity_name: str, day: int):
     dataset_path = "dataset/{}.csv".format(commodity_name)
-    dataset = commodity_dataset(dataset_path)
+    _, dataset = commodity_dataset(dataset_path)
     return success_response(dataset[-day:])
 
 
@@ -70,7 +78,13 @@ def price_prediction(day_future: int, model, commodity_series):
     for i in range(day_future):
         rnn_forecast = model_forecast(model, temp[..., np.newaxis], len(temp))
         index_value = float(rnn_forecast[0][-1][0])
-        final_predict.append(index_value)
+
+        obj = {
+            "time": i,
+            "value": index_value
+        }
+
+        final_predict.append(obj)
 
         # delete first value
         temp = np.delete(temp, 0)
