@@ -1,4 +1,4 @@
-import numpy
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File
 import csv
 import uuid
@@ -8,10 +8,17 @@ import tensorflow as tf
 from datetime import date, timedelta
 import pandas as pd
 from PIL import Image, ImageOps
-import operator
 import shutil
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def success_response(data):
@@ -149,6 +156,3 @@ def model_forecast(model, series, window_size):
     ds = ds.batch(32).prefetch(1)
     forecast = model.predict(ds)
     return forecast
-
-# if __name__ == "__main__":
-#     print(commodity_image())
