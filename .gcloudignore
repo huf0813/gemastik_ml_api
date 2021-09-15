@@ -16,6 +16,7 @@
 Dockerfile
 docker-compose.yml
 .dockerignore
+venv
 
 # Python pycache:
 __pycache__/
