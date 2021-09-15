@@ -1,14 +1,12 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File
 import csv
-import uuid
-import os
+from io import BytesIO
 import numpy as np
 import tensorflow as tf
 from datetime import date, timedelta
 import pandas as pd
 from PIL import Image, ImageOps
-import shutil
 
 app = FastAPI()
 
@@ -44,7 +42,6 @@ def commodity_dataset(path):
             series.append(price)
 
             origin = row[0]
-            range_day = len(pd.date_range(start=origin, end=date.today().strftime("%Y-%m-%d")))
             obj = {
                 "time": origin,
                 "value": price
@@ -77,18 +74,14 @@ def commodity_future_price(commodity_name: str, day: int = 0):
 
 
 @app.post('/commodity_image/predict')
-def commodity_image(commodity_image: UploadFile = File(...)):
+async def commodity_image(commodity_image: bytes = File(...)):
     np.set_printoptions(suppress=True)
 
     model = tf.keras.models.load_model('models/keras_model.h5')
 
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
-    generate_uuid = uuid.uuid4().hex
-    file_name_uuid = '{}_{}'.format(generate_uuid, commodity_image.filename)
-    with open('temp/{}'.format(file_name_uuid), 'wb') as image:
-        shutil.copyfileobj(commodity_image.file, image)
-    image = Image.open('temp/{}'.format(file_name_uuid))
+    image = Image.open(BytesIO(commodity_image))
 
     size = (224, 224)
     image = ImageOps.fit(image, size, Image.ANTIALIAS)
@@ -110,7 +103,6 @@ def commodity_image(commodity_image: UploadFile = File(...)):
     else:
         result = {"commodity_name": "kopi", "deskripsi": "Kopi dengan jenis Papua Wamena. Kopi ini merupakan Jenis kopi arabika yang ditanam di Lembah Baliem pegunungan Jayawijaya. Kopi Arabika ini memiliki cita rasa yang sangat khas di banding dengan cita rasa Arabika lainnya, aroma kopinya harum halus dan memiliki after taste yang sangat manis. Kopi Arabika Papua Wamena juga memiliki kadar asam yang rendah sehingga bisa dikonsumsi oleh semua orang. Memiliki kadar air 12 persen dan difermentasi selama 8 hingga 10 jam."}
 
-    os.remove('temp/{}'.format(file_name_uuid))
     return success_response(result)
 
 
