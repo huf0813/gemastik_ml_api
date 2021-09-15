@@ -104,11 +104,11 @@ def commodity_image(commodity_image: UploadFile = File(...)):
     pr = np.argmax(prediction, axis=1)
 
     if pr[0] == 0:
-        result = {"commodity_name": "kedelai", "deskripsi": "kedelai dengan jenis"}
+        result = {"commodity_name": "kedelai", "deskripsi": "Kedelai dengan jenis Edamame, yang sekarang sedang naik daun. Edamame terbukti mengandung isoflavon tertinggi dibandingkan jenis kedelai lain. Kandungan protein edamame mencapai 36%, jauh lebih tinggi dibanding olahan kedelai lain.Edamame sangat ideal untuk Anda yang ingin mencari camilan rendah lemak, tetapi tinggi protein."}
     elif pr[0] == 1:
-        result = {"commodity_name": "jagung", "deskripsi": "jagung dengan jenis"}
+        result = {"commodity_name": "jagung", "deskripsi": "Jagung dengan jenis Jagung gigi kuda (dent corn). memiliki kandungan pati yang lebih tinggi daripada jagung manis, namun kadar gulanya justru lebih rendah. Jagung gigi kuda memiliki dua jenis warna, yaitu kuning dan putih. Biasanya jagung berwarna kuning digunakan sebagai pakan ternak. Sementara jagung berwarna putih dimanfaatkan untuk membuat roti ataupun tepung jagung. Di Amerika, jenis jagung ini digunakan untuk membuat keripik tortila."}
     else:
-        result = {"commodity_name": "kopi", "deskripsi": "kopi dengan jenis"}
+        result = {"commodity_name": "kopi", "deskripsi": "Kopi dengan jenis Papua Wamena. Kopi ini merupakan Jenis kopi arabika yang ditanam di Lembah Baliem pegunungan Jayawijaya. Kopi Arabika ini memiliki cita rasa yang sangat khas di banding dengan cita rasa Arabika lainnya, aroma kopinya harum halus dan memiliki after taste yang sangat manis. Kopi Arabika Papua Wamena juga memiliki kadar asam yang rendah sehingga bisa dikonsumsi oleh semua orang. Memiliki kadar air 12 persen dan difermentasi selama 8 hingga 10 jam."}
 
     os.remove('temp/{}'.format(file_name_uuid))
     return success_response(result)
