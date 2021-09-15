@@ -1,4 +1,4 @@
-FROM python:3.8.10
+FROM python:3.8-slim
 
 # set work directory
 WORKDIR /app
@@ -7,13 +7,9 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+COPY mod.txt .
 # update command linux
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
-
-# install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install python-multipart
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && pip install -r requirements.txt && pip install python-multipart
 
 # copy project
 COPY . .
