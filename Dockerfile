@@ -11,8 +11,8 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
 
 # install dependencies
-COPY mod.txt .
-RUN pip install -r mod.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install python-multipart
 
 # copy project
